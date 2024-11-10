@@ -57,7 +57,7 @@ def convert_files(src_dir):
                 
                 # 修改输出路径，确保 "res" 目录被替换为 "resource"
                 dst_file_path = os.path.join(dst_dir, Path(relative_path).with_suffix('.yaml'))
-                dst_file_path = dst_file_path.replace('\\res', '\\resource')
+                dst_file_path = dst_file_path.replace('\\res', '\\resources')
                 
                 # 创建目标文件夹（如果不存在）
                 os.makedirs(os.path.dirname(dst_file_path), exist_ok=True)
