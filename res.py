@@ -6,7 +6,7 @@ import shutil
 import argparse
 
 
-def parse_til_to_yaml(file_path):
+def parse_til_to_yaml(file_path, is_replace_inner_rect):
     """读取 .til 文件并转换为 YAML 格式"""
     config = configparser.ConfigParser()
     config.read(file_path, encoding="utf-8-sig")
@@ -25,12 +25,20 @@ def parse_til_to_yaml(file_path):
                     map(int, config.get(section, "INNER_RECT").split(","))
                 )
                 ix, iy, iwidth, iheight = inner_rect
-                inner_rect = {
-                    "top": iy - y,
-                    "bottom": height - (iy - y) - iheight,
-                    "left": ix - x,
-                    "right": width - (ix - x) - iwidth,
-                }
+                if is_replace_inner_rect and ix == x and iy == y and iwidth == width and iheight == height:
+                    inner_rect =  {
+                        'top': 40,
+                        'bottom': 40,
+                        'left': 35,
+                        'right': 35
+                    }    
+                else:
+                    inner_rect = {
+                        "top": iy - y,
+                        "bottom": height - (iy - y) - iheight,
+                        "left": ix - x,
+                        "right": width - (ix - x) - iwidth,
+                    }
             except configparser.NoOptionError:
                 inner_rect = None
 
@@ -44,7 +52,7 @@ def parse_til_to_yaml(file_path):
     return yaml.dump(yaml_data, sort_keys=False, allow_unicode=True)
 
 
-def convert_files(src_dir):
+def convert_files(src_dir, is_replace_inner_rect):
     """递归遍历目录，将 .til 文件转换为 .yaml 并保存到目标目录"""
     # 自动生成目标目录名并加上后缀
     dst_dir = f"{src_dir}-仓输入法"
@@ -70,7 +78,7 @@ def convert_files(src_dir):
                 os.makedirs(os.path.dirname(dst_file_path), exist_ok=True)
 
                 # 读取 .til 文件并转换为 YAML
-                yaml_content = parse_til_to_yaml(src_file_path)
+                yaml_content = parse_til_to_yaml(src_file_path, is_replace_inner_rect)
 
                 # 将 YAML 内容写入目标文件
                 with open(dst_file_path, "w", encoding="utf-8") as yaml_file:
@@ -84,16 +92,20 @@ def convert_files(src_dir):
                 if os.path.exists(png_file_path):
                     os.makedirs(os.path.dirname(dst_png_path), exist_ok=True)
                     shutil.copy2(png_file_path, dst_png_path)
+            if file == "demo.png":
+                dst_png_path = os.path.join(dst_dir, "demo.png")
+                shutil.copy2(os.path.join(root, file), dst_png_path)
 
 
 if __name__ == "__main__":
     # 初始化 ArgumentParser
     parser = argparse.ArgumentParser(description="处理源目录文件并保存到目标目录")
     parser.add_argument("source", type=Path, help="源目录路径")
+    parser.add_argument('--replace', action='store_const', const=1, default=0, help='是否当inner_rect等于source_rect时，替换为默认inner_rect值')
     # parser.add_argument("destination", type=Path, help="目标目录路径")
 
     # 解析参数
     args = parser.parse_args()
 
     # 执行文件转换
-    convert_files(args.source)
+    convert_files(args.source, args.replace)
