@@ -26,26 +26,26 @@ def parse_til_to_yaml(file_path, is_replace_inner_rect):
                 )
                 ix, iy, iwidth, iheight = inner_rect
                 if is_replace_inner_rect and ix == x and iy == y and iwidth == width and iheight == height:
-                    inner_rect =  {
+                    insets =  {
                         'top': 40,
                         'bottom': 40,
                         'left': 35,
                         'right': 35
                     }    
                 else:
-                    inner_rect = {
+                    insets = {
                         "top": iy - y,
                         "bottom": height - (iy - y) - iheight,
                         "left": ix - x,
                         "right": width - (ix - x) - iwidth,
                     }
             except configparser.NoOptionError:
-                inner_rect = None
+                insets = None
 
             # 构建 YAML 数据
             yaml_data[section] = (
-                {"rect": rect, "inner_rect": inner_rect}
-                if inner_rect
+                {"rect": rect, "insets": insets}
+                if insets
                 else {"rect": rect}
             )
 
