@@ -15,9 +15,16 @@ pip install -r requirements.txt
 ```bash
 python res.py "皮肤目录"
 ```
+
+可选参数
+- `--replace`: 对皮肤转换出来inner_rect全为0时，可转成我设定的默认值，不使用该参数时不进行替换。
 例:
 ```
 python.exe .\demo.py .\Gboard_anb
+```
+
+```
+python.exe .\demo.py .\Gboard_anb --replace
 ```
 
 >[!important]
