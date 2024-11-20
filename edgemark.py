@@ -35,10 +35,19 @@ def process_til_file(til_path, output_directory):
             text_x, text_y = x + width // 2, y + height * 0.8
             draw.text((text_x, text_y), section.replace("IMG", ""), fill="red", anchor="mm", font=font)
 
-    # 创建输出目录（如果不存在）
-    os.makedirs(output_directory, exist_ok=True)
+    # 判断路径中是否包含 'dark' 或 'light'
+    if "dark" in image_path.lower():
+        subdir = "dark"
+    elif "light" in image_path.lower():
+        subdir = "light"
+    else:
+        subdir = "other"
+    # 创建输出子目录
+    output_subdir = os.path.join(output_directory, subdir)
+    os.makedirs(output_subdir, exist_ok=True)
+
     # 保存绘制后的图片到新的路径
-    output_path = os.path.join(output_directory, os.path.basename(image_path))
+    output_path = os.path.join(output_subdir, os.path.basename(image_path))
     image.save(output_path)
     print(f"处理完成，结果保存至: {output_path}")
 
