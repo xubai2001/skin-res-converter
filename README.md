@@ -10,6 +10,7 @@ pip install -r requirements.txt
 ```
 
 ## 使用说明
+### 转换til文件
 在终端中运行:
 
 ```bash
@@ -25,6 +26,18 @@ python.exe .\demo.py .\Gboard_anb
 
 ```
 python.exe .\demo.py .\Gboard_anb --replace
+```
+
+#### 在图片上绘制IMG序号
+在终端中运行:
+
+```
+python edgemark.py "皮肤目录" "目标目录"
+```
+例:
+
+```
+python .\edgemark.py .\星河百度\ .\辅助图片
 ```
 
 >[!important]
