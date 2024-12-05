@@ -30,7 +30,7 @@ def process_til_file(til_path, output_directory):
             source_rect = list(map(int, config.get(section, "SOURCE_RECT").split(",")))
             x, y, width, height = source_rect
             # 绘制矩形边框
-            draw.rectangle([x, y, x + width, y + height], outline="red", width=2)
+            draw.rectangle([x, y, x + width, y + height], outline="red", width=1)
             # 在矩形中心绘制文字
             text_x, text_y = x + width // 2, y + height * 0.8
             draw.text((text_x, text_y), section.replace("IMG", ""), fill="red", anchor="mm", font=font)
