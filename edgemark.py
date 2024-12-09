@@ -4,6 +4,27 @@ import argparse
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
+
+def draw_ruler(draw, x, y, width, height):
+    """在矩形框四边绘制朝内的刻度"""
+    def draw_tick(start_x, start_y, end_x, end_y, label, color):
+        draw.line([(start_x, start_y), (end_x, end_y)], fill=color, width=1)
+
+    for i in range(10, 80, 10):
+        # 上边和下边 (红色)
+        draw_tick(x + i, y, x + i, y + 10, i, "#f00056")
+        draw_tick(x + width - i, y, x + width - i, y + 10, i, "#16a951")
+        draw_tick(x + i, y + height, x + i, y + height - 10, i, "#f00056")
+        draw_tick(x + width - i, y + height, x + width - i, y + height - 10, i, "#16a951")
+        
+        # 左边 (蓝色)
+        draw_tick(x, y + i, x + 10, y + i, i, "#4b5cc4")
+        draw_tick(x, y + height - i, x + 10, y + height - i, i, "#4b5cc4")
+        
+        # 右边 (绿色)
+        draw_tick(x + width, y + i, x + width - 10, y + i, i, "#16a951")
+        draw_tick(x + width, y + height - i, x + width - 10, y + height - i, i, "#16a951")
+
 def process_til_file(til_path, output_directory):
     """
     处理单个 .til 文件，解析配置并在对应的 .png 图片上绘制内容。
@@ -34,6 +55,9 @@ def process_til_file(til_path, output_directory):
             # 在矩形中心绘制文字
             text_x, text_y = x + width // 2, y + height * 0.8
             draw.text((text_x, text_y), section.replace("IMG", ""), fill="red", anchor="mm", font=font)
+            # 绘制刻度标记
+            if width >= 100 and height >= 100:
+                draw_ruler(draw, x, y, width, height)
 
     # 判断路径中是否包含 'dark' 或 'light'
     if "dark" in image_path.lower():
