@@ -10,7 +10,12 @@ pip install -r requirements.txt
 ```
 
 ## 使用说明
-### 转换til文件
+转换til文件+复制图片+生成切片序号标记+生成百度键盘键位前景背景图片列表
+```bash
+python main.py "皮肤目录"
+```
+
+### 单独使用转换til文件功能
 在终端中运行:
 
 ```bash
@@ -28,7 +33,7 @@ python.exe .\demo.py .\Gboard_anb
 python.exe .\demo.py .\Gboard_anb --replace
 ```
 
-### 在图片上绘制IMG序号
+### 单独使用在图片上绘制IMG序号功能
 在终端中运行:
 
 ```

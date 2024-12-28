@@ -1,9 +1,8 @@
 import os
 import configparser
-import argparse
-from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-
+from pathlib import Path
+import argparse
 
 def draw_ruler(draw, x, y, width, height):
     """在矩形框四边绘制朝内的刻度"""
@@ -75,15 +74,16 @@ def process_til_file(til_path, output_directory):
     image.save(output_path)
     print(f"处理完成，结果保存至: {output_path}")
 
-def process_directory(directory, output_directory):
+def process(source_path, destination_path):
     """
     遍历路径下的所有 .til 文件，并调用处理函数。
     """
-    for root, _, files in os.walk(directory):
+    for root, _, files in os.walk(source_path):
         for file in files:
             if file.endswith(".til"):
                 til_path = os.path.join(root, file)
-                process_til_file(til_path, output_directory)
+                process_til_file(til_path, destination_path)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="处理源目录文件并保存到目标目录")
@@ -93,4 +93,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # 执行文件转换
-    process_directory(args.source, args.target)
+    process(args.source, args.target)
