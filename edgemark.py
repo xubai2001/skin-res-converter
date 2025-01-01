@@ -24,19 +24,19 @@ def draw_ruler(draw, x, y, width, height):
         draw_tick(x + width, y + i, x + width - 10, y + i, i, "#16a951")
         draw_tick(x + width, y + height - i, x + width - 10, y + height - i, i, "#16a951")
 
-def process_til_file(til_path, output_directory):
+def process_til_file(src_dir, dst_dir):
     """
     处理单个 .til 文件，解析配置并在对应的 .png 图片上绘制内容。
     """
     # 获取对应的图片路径
-    image_path = os.path.splitext(til_path)[0] + ".png"
+    image_path = os.path.splitext(src_dir)[0] + ".png"
     if not os.path.exists(image_path):
         print(f"对应的图片文件不存在: {image_path}")
         return
 
     # 读取 .til 配置文件
     config = configparser.ConfigParser()
-    config.read(til_path, encoding="utf-8-sig")
+    config.read(src_dir, encoding="utf-8-sig")
 
     # 打开对应的图片
     image = Image.open(image_path)
@@ -58,39 +58,63 @@ def process_til_file(til_path, output_directory):
             if width >= 100 and height >= 100:
                 draw_ruler(draw, x, y, width, height)
 
-    # 判断路径中是否包含 'dark' 或 'light'
-    if "dark" in image_path.lower():
-        subdir = "dark"
-    elif "light" in image_path.lower():
-        subdir = "light"
-    else:
-        subdir = "other"
-    # 创建输出子目录
-    output_subdir = os.path.join(output_directory, subdir)
-    os.makedirs(output_subdir, exist_ok=True)
 
     # 保存绘制后的图片到新的路径
-    output_path = os.path.join(output_subdir, os.path.basename(image_path))
-    image.save(output_path)
-    print(f"处理完成，结果保存至: {output_path}")
+    # os.makedirs(dst_dir, exist_ok=True)
+    image.save(dst_dir)
+    # print(f"处理完成，结果保存至: {dst_dir}")
 
-def process(source_path, destination_path):
+def process(src_dir):
     """
     遍历路径下的所有 .til 文件，并调用处理函数。
     """
-    for root, _, files in os.walk(source_path):
-        for file in files:
-            if file.endswith(".til"):
-                til_path = os.path.join(root, file)
-                process_til_file(til_path, destination_path)
+    src_folder_name = os.path.basename(src_dir)
+    dst_base_dir = os.path.join(os.path.dirname(src_dir), f"{src_folder_name}-辅助")
+
+    # 
+    dst_dark_dir = os.path.join(dst_base_dir, "dark")
+    dst_light_dir = os.path.join(dst_base_dir, "light")
+
+    # 创建目录
+    os.makedirs(dst_dark_dir, exist_ok=True)
+    os.makedirs(dst_light_dir, exist_ok=True)
+    # print(f"目标目录: {dst_dark_dir}")
+
+    # 递归处理 dark 和 light 目录
+    for mode in ["dark", "light"]:
+        src_mode_dir = os.path.join(src_dir, mode)
+
+        if not os.path.exists(src_mode_dir):
+            print(f"警告: 源目录中未找到 {mode} 子目录: {src_mode_dir}")
+            continue
+
+        # 递归处理 dark 和 light 目录
+        for root, _, files in os.walk(src_mode_dir):
+            for file in files:
+                if file.endswith(".til"):
+                    src_file_path = os.path.join(root, file) # 此路径为.til文件路径
+                    if "land" in src_file_path:
+                        continue # 跳过 land 目录
+                    # 确定目标目录
+                    dst_mode_dir = dst_dark_dir if mode == "dark" else dst_light_dir
+                    dst_png_dir = os.path.join(dst_mode_dir, file.replace(".til", ".png")) # 转换图片的目标目录
+
+                    # 创建目标文件夹（如果不存在）
+                    os.makedirs(os.path.dirname(dst_png_dir), exist_ok=True)
+
+                    print(dst_png_dir)
+                    # 处理图片
+                    process_til_file(src_file_path, dst_png_dir)
+
+                    print(f"图片处理完成: {src_file_path} -> {dst_png_dir}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="处理源目录文件并保存到目标目录")
     parser.add_argument("source", type=Path, help="源目录路径")
-    parser.add_argument("target", type=Path, help="目标目录路径")
+    # parser.add_argument("target", type=Path, help="目标目录路径")
     # 解析参数
     args = parser.parse_args()
 
     # 执行文件转换
-    process(args.source, args.target)
+    process(args.source)

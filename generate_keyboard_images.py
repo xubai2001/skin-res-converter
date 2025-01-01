@@ -150,17 +150,31 @@ def parse_py_26(file_path, hamster_dict):
     with open("./百度转仓输入法/hamster_skin_com.yaml", 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True, sort_keys=False)
     
-def process(source_path, destination_path):
+def process(src_dir):
+    # 创建目标目录结构：源文件夹名称-仓输入法/dark/resources 和 light/resources
+    src_folder_name = os.path.basename(src_dir) #源文件夹名称
+    dst_dir = os.path.join(os.path.dirname(src_dir), f"{src_folder_name}-辅助") # 目标文件夹路径
     # 执行文件转换
     target_folders = ['dark', 'light']
     target_files = ['default.css', 'py_26.ini', 'py_9.ini', 'num_9.ini','symbol.ini','sel_ch.ini']
 
-    files = get_files(source_path, target_folders, target_files)
+
+
+    files = get_files(src_dir, target_folders, target_files)
     for theme, value in files.items():
         default_css = parse_ini_with_duplicates(value['default.css'])
         for name, path in value.items():
             if name.endswith('.ini'):
                 new_name = name.replace('.ini', '.json')
-                parse_keyboard(path, f"{destination_path}/{theme}/{new_name}", default_css)
-                print(f"{name}处理完成 结果保存至:{destination_path}/{theme}/{new_name}")
+                parse_keyboard(path, f"{dst_dir}/{theme}/{new_name}", default_css)
+                print(f"{name}处理完成 结果保存至:{dst_dir}/{theme}/{new_name}")
     
+if __name__ == "__main__":
+    # 初始化 ArgumentParser
+    parser = argparse.ArgumentParser(description="处理源目录文件并保存到目标目录")
+    parser.add_argument("source", type=Path, help="源目录路径")
+    # 解析参数
+    args = parser.parse_args()
+
+    # 执行文件转换
+    process(args.source)
