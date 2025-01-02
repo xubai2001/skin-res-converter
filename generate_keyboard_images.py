@@ -156,7 +156,7 @@ def process(src_dir):
     dst_dir = os.path.join(os.path.dirname(src_dir), f"{src_folder_name}-辅助") # 目标文件夹路径
     # 执行文件转换
     target_folders = ['dark', 'light']
-    target_files = ['default.css', 'py_26.ini', 'py_9.ini', 'num_9.ini','symbol.ini','sel_ch.ini']
+    target_files = ['default.css', 'py_26.ini', 'en_26.ini', 'py_9.ini', 'num_9.ini','symbol.ini','sel_ch.ini']
 
 
 
