@@ -75,7 +75,22 @@ def parse_ini_with_duplicates(file_path):
 
 def parse_keyboard(file_path, output_path,css_dict: dict):
     config = configparser.ConfigParser()
-    config.read(file_path, encoding="utf-8-sig")
+
+    # 百度配置中的ini并不标准，这里手动读取处理一下
+    valid_lines = []
+    with open(file_path, encoding="utf-8-sig") as f:
+        for line in f:
+            line = line.strip()
+            # 检查行是否是有效的节或键值对
+            if line.startswith("[") and line.endswith("]"):
+                valid_lines.append(line)
+            elif "=" in line:
+                valid_lines.append(line)
+            # 忽略错误行: 没有[]和没有=
+            elif line:
+                print(f"忽略无效行: {line}")
+    config.read_string('\n'.join(valid_lines))
+    # config.read(file_path, encoding="utf-8-sig")
 
     # 解析default.css中对应的文件和切片
     def parse_style(style, type):
@@ -98,7 +113,8 @@ def parse_keyboard(file_path, output_path,css_dict: dict):
                 "normalImage": parse_style(backgroundStyle, "NM_IMG"),
                 "highlightImage": parse_style(backgroundStyle, "HL_IMG"),
             }
-            except:
+            except Exception as e:
+                print(f"背景样式异常: {e}")
                 backgroundStyle = {}
 
             # 前景处理
@@ -114,7 +130,8 @@ def parse_keyboard(file_path, output_path,css_dict: dict):
                         "highlightImage": parse_style(style, "HL_IMG"),
                     }
                     foregroundStyles.append(foregroundStyle_dict)  # 将符合条件的 foregroundStyle 添加到数组中
-            except:
+            except Exception as e:
+                print(f"前景样式异常: {e}")
                 foregroundStyles = []
             hamster_dict[key_name] = {
                 "backgroundStyle": backgroundStyle,
@@ -129,26 +146,26 @@ def parse_keyboard(file_path, output_path,css_dict: dict):
 
 
 
-def parse_py_26(file_path, hamster_dict):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        data = yaml.safe_load(f)
-    # 替换字母键背景 前景
-    for i in "qwertyuiopasdfghjklzxcvbnm":
-        data[f"{i}ButtonBackgroundStyle"] = hamster_dict[i]["backgroundStyle"]
-        data[f"{i}Button"]["backgroundStyle"] = f"{i}ButtonBackgroundStyle"
+# def parse_py_26(file_path, hamster_dict):
+#     with open(file_path, 'r', encoding='utf-8') as f:
+#         data = yaml.safe_load(f)
+#     # 替换字母键背景 前景
+#     for i in "qwertyuiopasdfghjklzxcvbnm":
+#         data[f"{i}ButtonBackgroundStyle"] = hamster_dict[i]["backgroundStyle"]
+#         data[f"{i}Button"]["backgroundStyle"] = f"{i}ButtonBackgroundStyle"
 
-        data[f"{i}ButtonForegroundStyle"]["normalImage"] = hamster_dict[i]["foregroundStyle"]["normalImage"]
-        data[f"{i}ButtonForegroundStyle"]["highlightImage"] = hamster_dict[i]["foregroundStyle"]["highlightImage"]
+#         data[f"{i}ButtonForegroundStyle"]["normalImage"] = hamster_dict[i]["foregroundStyle"]["normalImage"]
+#         data[f"{i}ButtonForegroundStyle"]["highlightImage"] = hamster_dict[i]["foregroundStyle"]["highlightImage"]
 
-    # 替换功能键
-    for i in ["shift", "backspace", "symbol", "123", "space", "enter"]:
-        data[f"{i}ButtonBackgroundStyle"]["normalImage"] = hamster_dict[i]["backgroundStyle"]["normalImage"]
-        data[f"{i}ButtonBackgroundStyle"]["highlightImage"] = hamster_dict[i]["backgroundStyle"]["highlightImage"]
+#     # 替换功能键
+#     for i in ["shift", "backspace", "symbol", "123", "space", "enter"]:
+#         data[f"{i}ButtonBackgroundStyle"]["normalImage"] = hamster_dict[i]["backgroundStyle"]["normalImage"]
+#         data[f"{i}ButtonBackgroundStyle"]["highlightImage"] = hamster_dict[i]["backgroundStyle"]["highlightImage"]
 
-        data[f"{i}ButtonForegroundStyle"]["normalImage"] = hamster_dict[i]["foregroundStyle"]["normalImage"]
-        data[f"{i}ButtonForegroundStyle"]["highlightImage"] = hamster_dict[i]["foregroundStyle"]["highlightImage"]
-    with open("./百度转仓输入法/hamster_skin_com.yaml", 'w', encoding='utf-8') as f:
-        yaml.dump(data, f, allow_unicode=True, sort_keys=False)
+#         data[f"{i}ButtonForegroundStyle"]["normalImage"] = hamster_dict[i]["foregroundStyle"]["normalImage"]
+#         data[f"{i}ButtonForegroundStyle"]["highlightImage"] = hamster_dict[i]["foregroundStyle"]["highlightImage"]
+#     with open("./百度转仓输入法/hamster_skin_com.yaml", 'w', encoding='utf-8') as f:
+#         yaml.dump(data, f, allow_unicode=True, sort_keys=False)
     
 def process(src_dir):
     # 创建目标目录结构：源文件夹名称-仓输入法/dark/resources 和 light/resources
