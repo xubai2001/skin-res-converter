@@ -1,10 +1,10 @@
-import yaml
 import configparser
 import json
 import os
 import argparse
 from pathlib import Path
 from collections import defaultdict
+from typing import Dict, List, Any
 
 baiduKeyMap = {
     "'": "分词",
@@ -31,7 +31,6 @@ baiduKeyMap = {
 
 
 def get_files(root_folder, target_folders, target_files):
-    # 初始化字典，键为 target_folders 中的文件夹名称，值为空字典
     result = {folder: {} for folder in target_folders}
     
     # 查找目标文件夹
@@ -46,8 +45,7 @@ def get_files(root_folder, target_folders, target_files):
     return result
 
 def save_to_json(hamster_dict, output_path):
-    # 检查 output_path 是否存在，如果不存在则创建文件
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True) # 创建输出目录
     
     # 写入 JSON 文件
     with open(output_path, "w", encoding="utf-8") as f:
@@ -72,100 +70,91 @@ def parse_ini_with_duplicates(file_path):
                 raise ValueError(f"Invalid line: {line}")
     return data
 
+def parse_style(style: str, type: str, css_dict: Dict[str, Any]) -> Dict[str, str]:
+    """解析样式信息"""
+    try:
+        file, image = css_dict[f"STYLE{style}"][type][0].split(",")
+        return {"file": file, "image": "IMG" + image}
+    except KeyError:
+        print(f"样式 {style} 或类型 {type} 在 css_dict 中未找到")
+        return {}
+    except Exception as e:
+        print(f"解析样式时发生异常: {e}")
+        return {}
 
-def parse_keyboard(file_path, output_path,css_dict: dict):
+def parse_config_file(file_path: str) -> configparser.ConfigParser:
+    """解析并处理配置文件"""
     config = configparser.ConfigParser()
-
     # 百度配置中的ini并不标准，这里手动读取处理一下
     valid_lines = []
+    
     with open(file_path, encoding="utf-8-sig") as f:
         for line in f:
             line = line.strip()
-            # 检查行是否是有效的节或键值对
             if line.startswith("[") and line.endswith("]"):
                 valid_lines.append(line)
             elif "=" in line:
                 valid_lines.append(line)
-            # 忽略错误行: 没有[]和没有=
             elif line:
                 print(f"忽略无效行: {line}")
+    
     config.read_string('\n'.join(valid_lines))
-    # config.read(file_path, encoding="utf-8-sig")
+    return config
 
-    # 解析default.css中对应的文件和切片
-    def parse_style(style, type):
-        return {
-            "file": css_dict[f"STYLE{style}"][type][0].split(",")[0],
-            "image": "IMG" + css_dict[f"STYLE{style}"][type][0].split(",")[1],
-        }
+def parse_keyboard(file_path: str, output_path: str, css_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """根据百度皮肤内的default.css文件和百度皮肤键盘的配置文件，解析出各个按键的背景和前景图片，并保存到 hamster_dict 中，最后保存到 JSON 文件
 
+    :param file_path: 百度皮肤键盘配置文件路径
+    :param output_path: 输出 JSON 文件路径
+    :param css_dict: 解析 default.css 文件得到的字典
+    """
+
+    config = parse_config_file(file_path) # 解析百度键盘ini文件
     hamster_dict = {}
+
     for section in config.sections():
-        if config.has_option(section, "CENTER"):
-            key_name = config.get(section, "CENTER")
-            if key_name in baiduKeyMap:
-                key_name = baiduKeyMap[key_name]
-            # 读取百度键盘配置 按键背景+前景
-            # 背景处理
+        if not config.has_option(section, "CENTER"):
+            continue
+
+        key_name = config.get(section, "CENTER")
+        key_name = baiduKeyMap.get(key_name, key_name)
+
+        # 解析背景样式
+        backgroundStyle = {}
+        if config.has_option(section, "BACK_STYLE"):
             try:
-                backgroundStyle = config.get(section, "BACK_STYLE")
+                background_style = config.get(section, "BACK_STYLE")
                 backgroundStyle = {
-                "normalImage": parse_style(backgroundStyle, "NM_IMG"),
-                "highlightImage": parse_style(backgroundStyle, "HL_IMG"),
-            }
+                    "normalImage": parse_style(background_style, "NM_IMG", css_dict),
+                    "highlightImage": parse_style(background_style, "HL_IMG", css_dict),
+                }
             except Exception as e:
                 print(f"背景样式异常: {e}")
-                backgroundStyle = {}
 
-            # 前景处理
+        # 解析前景样式
+        foregroundStyles = []
+        if config.has_option(section, "FORE_STYLE"):
             try:
-                foregroundStyle = config.get(section, "FORE_STYLE")
-                # 前景有多个 需遍历转换
-                foregroundStyles = []  # 创建一个空数组来存储符合条件的 foregroundStyle
-                for style in foregroundStyle.split(","):
-                    if "NM_IMG" not in css_dict.get(f"STYLE{style}", ""):
-                        continue
-                    foregroundStyle_dict = {
-                        "normalImage": parse_style(style, "NM_IMG"),
-                        "highlightImage": parse_style(style, "HL_IMG"),
+                foreground_style = config.get(section, "FORE_STYLE")
+                foregroundStyles = [
+                    {
+                        "normalImage": parse_style(style, "NM_IMG", css_dict),
+                        "highlightImage": parse_style(style, "HL_IMG", css_dict),
                     }
-                    foregroundStyles.append(foregroundStyle_dict)  # 将符合条件的 foregroundStyle 添加到数组中
+                    for style in foreground_style.split(",")
+                    if "NM_IMG" in css_dict.get(f"STYLE{style}", "")
+                ]
             except Exception as e:
                 print(f"前景样式异常: {e}")
-                foregroundStyles = []
-            hamster_dict[key_name] = {
-                "backgroundStyle": backgroundStyle,
-                "foregroundStyle": foregroundStyles  # 将 foregroundStyle 设为数组
-            }
-    
 
-    # with open(output_path, "w", encoding="utf-8") as f:
-    #     json.dump(hamster_dict, f, indent=4, ensure_ascii=False)
+        hamster_dict[key_name] = {
+            "backgroundStyle": backgroundStyle,
+            "foregroundStyle": foregroundStyles,
+        }
+
     save_to_json(hamster_dict, output_path)
     return hamster_dict
 
-
-
-# def parse_py_26(file_path, hamster_dict):
-#     with open(file_path, 'r', encoding='utf-8') as f:
-#         data = yaml.safe_load(f)
-#     # 替换字母键背景 前景
-#     for i in "qwertyuiopasdfghjklzxcvbnm":
-#         data[f"{i}ButtonBackgroundStyle"] = hamster_dict[i]["backgroundStyle"]
-#         data[f"{i}Button"]["backgroundStyle"] = f"{i}ButtonBackgroundStyle"
-
-#         data[f"{i}ButtonForegroundStyle"]["normalImage"] = hamster_dict[i]["foregroundStyle"]["normalImage"]
-#         data[f"{i}ButtonForegroundStyle"]["highlightImage"] = hamster_dict[i]["foregroundStyle"]["highlightImage"]
-
-#     # 替换功能键
-#     for i in ["shift", "backspace", "symbol", "123", "space", "enter"]:
-#         data[f"{i}ButtonBackgroundStyle"]["normalImage"] = hamster_dict[i]["backgroundStyle"]["normalImage"]
-#         data[f"{i}ButtonBackgroundStyle"]["highlightImage"] = hamster_dict[i]["backgroundStyle"]["highlightImage"]
-
-#         data[f"{i}ButtonForegroundStyle"]["normalImage"] = hamster_dict[i]["foregroundStyle"]["normalImage"]
-#         data[f"{i}ButtonForegroundStyle"]["highlightImage"] = hamster_dict[i]["foregroundStyle"]["highlightImage"]
-#     with open("./百度转仓输入法/hamster_skin_com.yaml", 'w', encoding='utf-8') as f:
-#         yaml.dump(data, f, allow_unicode=True, sort_keys=False)
     
 def process(src_dir):
     # 创建目标目录结构：源文件夹名称-仓输入法/dark/resources 和 light/resources
@@ -174,8 +163,6 @@ def process(src_dir):
     # 执行文件转换
     target_folders = ['dark', 'light']
     target_files = ['default.css', 'py_26.ini', 'en_26.ini', 'py_9.ini', 'num_9.ini','symbol.ini','sel_ch.ini']
-
-
 
     files = get_files(src_dir, target_folders, target_files)
     for theme, value in files.items():
