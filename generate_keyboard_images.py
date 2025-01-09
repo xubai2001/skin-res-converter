@@ -4,7 +4,7 @@ import os
 import argparse
 from pathlib import Path
 from collections import defaultdict
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 baiduKeyMap = {
     "'": "分词",
@@ -79,7 +79,7 @@ def parse_style(style: str, type: str, css_dict: Dict[str, Any]) -> Dict[str, st
         print(f"样式 {style} 或类型 {type} 在 css_dict 中未找到")
         return {}
     except Exception as e:
-        print(f"解析样式时发生异常: {e}")
+        print(f"解析样式时发生异常: {e}, style: {style}, type: {type}")
         return {}
 
 def parse_config_file(file_path: str) -> configparser.ConfigParser:
@@ -104,9 +104,10 @@ def parse_config_file(file_path: str) -> configparser.ConfigParser:
 def parse_keyboard(file_path: str, output_path: str, css_dict: Dict[str, Any]) -> Dict[str, Any]:
     """根据百度皮肤内的default.css文件和百度皮肤键盘的配置文件，解析出各个按键的背景和前景图片，并保存到 hamster_dict 中，最后保存到 JSON 文件
 
-    :param file_path: 百度皮肤键盘配置文件路径
-    :param output_path: 输出 JSON 文件路径
-    :param css_dict: 解析 default.css 文件得到的字典
+    参数:
+    file_path (str): 百度皮肤键盘配置文件路径
+    output_path (str): 输出 JSON 文件路径
+    css_dict (Dict[str, Any]): 解析 default.css 文件得到的字典
     """
 
     config = parse_config_file(file_path) # 解析百度键盘ini文件
@@ -157,7 +158,11 @@ def parse_keyboard(file_path: str, output_path: str, css_dict: Dict[str, Any]) -
 
     
 def process(src_dir):
-    # 创建目标目录结构：源文件夹名称-仓输入法/dark/resources 和 light/resources
+    """
+    创建目标目录结构：源文件夹名称-仓输入法/dark/resources 和 light/resources
+    参数:
+        src_dir (str): 源目录路径
+    """
     src_folder_name = os.path.basename(src_dir) #源文件夹名称
     dst_dir = os.path.join(os.path.dirname(src_dir), f"{src_folder_name}-辅助") # 目标文件夹路径
     # 执行文件转换

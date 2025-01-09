@@ -5,24 +5,42 @@ from pathlib import Path
 import argparse
 
 def draw_ruler(draw, x, y, width, height):
-    """在矩形框四边绘制朝内的刻度"""
-    def draw_tick(start_x, start_y, end_x, end_y, label, color):
+    """
+    在矩形框四个角落绘制朝内的刻度 一个刻度为 10px
+
+    参数:
+    darw (ImageDraw.Draw): ImageDraw 对象
+    x, y, width, height (int): 矩形框的坐标和大小
+    """
+    TICK_LENGTH = 10
+    COLORS = {
+        "red": "#f00056",
+        "green": "#16a951",
+        "blue": "#4b5cc4"
+    }
+    def draw_tick(start_x, start_y, end_x, end_y, color):
+        """绘制刻度线"""
         draw.line([(start_x, start_y), (end_x, end_y)], fill=color, width=1)
 
-    for i in range(10, 80, 10):
-        # 上边和下边 (红色)
-        draw_tick(x + i, y, x + i, y + 10, i, "#f00056")
-        draw_tick(x + width - i, y, x + width - i, y + 10, i, "#16a951")
-        draw_tick(x + i, y + height, x + i, y + height - 10, i, "#f00056")
-        draw_tick(x + width - i, y + height, x + width - i, y + height - 10, i, "#16a951")
-        
-        # 左边 (蓝色)
-        draw_tick(x, y + i, x + 10, y + i, i, "#4b5cc4")
-        draw_tick(x, y + height - i, x + 10, y + height - i, i, "#4b5cc4")
-        
-        # 右边 (绿色)
-        draw_tick(x + width, y + i, x + width - 10, y + i, i, "#16a951")
-        draw_tick(x + width, y + height - i, x + width - 10, y + height - i, i, "#16a951")
+    def draw_ticks_on_side(start_x, start_y, end_x, end_y, color, is_horizontal):
+        """在指定边上绘制刻度"""
+        for i in range(10, 80, 10):
+            if is_horizontal:
+                draw_tick(start_x + i, start_y, start_x + i, end_y, color)
+                draw_tick(start_x + width - i, start_y, start_x + width - i, end_y, color)
+            else:
+                draw_tick(start_x, start_y + i, end_x, start_y + i, color)
+                draw_tick(start_x, start_y + height - i, end_x, start_y + height - i, color)
+
+    # 上边和下边 (红色)
+    draw_ticks_on_side(x, y, x, y + TICK_LENGTH, COLORS["red"], is_horizontal=True)
+    draw_ticks_on_side(x, y + height, x, y + height - TICK_LENGTH, COLORS["red"], is_horizontal=True)
+
+    # 左边 (蓝色)
+    draw_ticks_on_side(x, y, x + TICK_LENGTH, y, COLORS["blue"], is_horizontal=False)
+
+    # 右边 (绿色)
+    draw_ticks_on_side(x + width, y, x + width - TICK_LENGTH, y, COLORS["green"], is_horizontal=False)
 
 def process_til_file(src_dir, dst_dir):
     """
@@ -41,7 +59,8 @@ def process_til_file(src_dir, dst_dir):
     # 打开对应的图片
     image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("arial.ttf", 30)
+    # font = ImageFont.truetype("arial.ttf", 30)
+    font = ImageFont.load_default(30)
 
     # 遍历所有配置节
     for section in config.sections():
