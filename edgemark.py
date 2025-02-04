@@ -6,41 +6,50 @@ import argparse
 
 def draw_ruler(draw, x, y, width, height):
     """
-    在矩形框四个角落绘制朝内的刻度 一个刻度为 10px
+    在矩形框四个角落绘制朝内的刻度，一个刻度为 10px。
+    每个边的两端使用不同的颜色。
 
     参数:
-    darw (ImageDraw.Draw): ImageDraw 对象
+    draw (ImageDraw.Draw): ImageDraw 对象
     x, y, width, height (int): 矩形框的坐标和大小
     """
     TICK_LENGTH = 10
     COLORS = {
         "red": "#f00056",
         "green": "#16a951",
-        "blue": "#4b5cc4"
+        "blue": "#4b5cc4",
+        "brown": "#b35c44"  # 添加黄色作为另一种颜色
     }
+
     def draw_tick(start_x, start_y, end_x, end_y, color):
         """绘制刻度线"""
         draw.line([(start_x, start_y), (end_x, end_y)], fill=color, width=1)
 
-    def draw_ticks_on_side(start_x, start_y, end_x, end_y, color, is_horizontal):
-        """在指定边上绘制刻度"""
+    def draw_ticks_on_side(start_x, start_y, end_x, end_y, color_left, color_right, is_horizontal):
+        """在指定边上绘制刻度，两端使用不同的颜色"""
         for i in range(10, 80, 10):
             if is_horizontal:
-                draw_tick(start_x + i, start_y, start_x + i, end_y, color)
-                draw_tick(start_x + width - i, start_y, start_x + width - i, end_y, color)
+                # 左边的刻度
+                draw_tick(start_x + i, start_y, start_x + i, end_y, color_left)
+                # 右边的刻度
+                draw_tick(start_x + width - i, start_y, start_x + width - i, end_y, color_right)
             else:
-                draw_tick(start_x, start_y + i, end_x, start_y + i, color)
-                draw_tick(start_x, start_y + height - i, end_x, start_y + height - i, color)
+                # 上边的刻度
+                draw_tick(start_x, start_y + i, end_x, start_y + i, color_left)
+                # 下边的刻度
+                draw_tick(start_x, start_y + height - i, end_x, start_y + height - i, color_right)
 
-    # 上边和下边 (红色)
-    draw_ticks_on_side(x, y, x, y + TICK_LENGTH, COLORS["red"], is_horizontal=True)
-    draw_ticks_on_side(x, y + height, x, y + height - TICK_LENGTH, COLORS["red"], is_horizontal=True)
+    # 上边 (左端红色，右端绿色)
+    draw_ticks_on_side(x, y, x, y + TICK_LENGTH, COLORS["red"], COLORS["green"], is_horizontal=True)
 
-    # 左边 (蓝色)
-    draw_ticks_on_side(x, y, x + TICK_LENGTH, y, COLORS["blue"], is_horizontal=False)
+    # 下边 (左端蓝色，右端黄色)
+    draw_ticks_on_side(x, y + height, x, y + height - TICK_LENGTH, COLORS["blue"], COLORS["brown"], is_horizontal=True)
 
-    # 右边 (绿色)
-    draw_ticks_on_side(x + width, y, x + width - TICK_LENGTH, y, COLORS["green"], is_horizontal=False)
+    # 左边 (上端红色，下端蓝色)
+    draw_ticks_on_side(x, y, x + TICK_LENGTH, y, COLORS["red"], COLORS["blue"], is_horizontal=False)
+
+    # 右边 (上端绿色，下端黄色)
+    draw_ticks_on_side(x + width, y, x + width - TICK_LENGTH, y, COLORS["green"], COLORS["brown"], is_horizontal=False)
 
 def process_til_file(src_dir, dst_dir):
     """
