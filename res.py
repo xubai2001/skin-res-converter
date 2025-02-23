@@ -101,7 +101,7 @@ if __name__ == "__main__":
     # 初始化 ArgumentParser
     parser = argparse.ArgumentParser(description="处理源目录文件并保存到目标目录")
     parser.add_argument("source", type=Path, help="源目录路径")
-    parser.add_argument("destination", type=Path, help="目标目录路径")
+    # parser.add_argument("destination", type=Path, help="目标目录路径")
     # 解析参数
     args = parser.parse_args()
 
